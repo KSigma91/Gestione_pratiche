@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\AdminController;
 
 /*
 |--------------------------------------------------------------------------
@@ -14,10 +15,26 @@ use Illuminate\Support\Facades\Auth;
 |
 */
 
-Route::get('/', function () {
-    return view('welcome');
-});
+// Route::get('/', function () {
+//     return view('welcome');
+// });
 
 Auth::routes();
 
-Route::get('/home', 'HomeController@index')->name('home');
+Route::get('/', function () {
+    if (\Illuminate\Support\Facades\Auth::check()) {
+        return redirect()->route('admin.pratiche.index');
+    }
+    return redirect()->route('login');
+});
+
+Route::get('/home', function () {
+    return redirect()->route('admin.pratiche.index');
+})->name('home');
+
+Route::middleware('auth')->group(function () {
+    Route::get('/admin/pratiche', [AdminController::class, 'index'])->name('admin.pratiche.index');
+    Route::post('/admin/pratiche/{id}/delete', [AdminController::class, 'destroy'])->name('admin.pratiche.delete');
+    Route::post('/admin/pratiche/{id}/force-delete', [AdminController::class, 'forceDelete'])->name('admin.pratiche.force-delete');
+    Route::post('/admin/pratiche/{id}/schedule-delete', [AdminController::class, 'scheduleDelete'])->name('admin.pratiche.schedule-delete');
+});
