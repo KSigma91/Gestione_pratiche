@@ -14,14 +14,14 @@ class Practice extends Model
     protected $fillable = [
         'codice',
         'cliente_nome',
+        'caso',
         'tipo_pratica',
         'stato',
         'data_arrivo',
         'data_scadenza',
         'note',
         'alerted',
-        'delete_scheduled_at'
     ];
 
-    protected $dates = ['data_arrivo', 'data_scadenza', 'delete_scheduled_at', 'deleted_at', 'created_at', 'updated_at'];
+    protected $dates = ['data_arrivo', 'data_scadenza', 'deleted_at', 'created_at', 'updated_at'];
 }

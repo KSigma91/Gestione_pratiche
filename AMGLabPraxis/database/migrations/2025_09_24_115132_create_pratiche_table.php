@@ -17,13 +17,13 @@ class CreatePraticheTable extends Migration
             $table->bigIncrements('id');
             $table->string('codice', 100);
             $table->string('cliente_nome', 255);
+            $table->string('caso')->nullable();
             $table->string('tipo_pratica', 100);
             $table->enum('stato', ['in_giacenza','in_lavorazione','completata','annullata'])->default('in_giacenza');
-            $table->date('data_arrivo');
-            $table->date('data_scadenza')->nullable();
+            $table->dateTime('data_arrivo');
+            $table->dateTime('data_scadenza')->nullable();
             $table->text('note')->nullable();
             $table->boolean('alerted')->default(false);
-            $table->dateTime('delete_scheduled_at')->nullable();
             $table->timestamps();
             $table->softDeletes();
 

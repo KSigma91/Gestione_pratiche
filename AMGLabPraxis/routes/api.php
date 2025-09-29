@@ -27,5 +27,4 @@ Route::middleware('auth')->group(function () {
     Route::delete('/pratiche/{id}', [PracticeController::class, 'destroy']);
     Route::post('/pratiche/{id}/force-delete', [PracticeController::class, 'forceDelete']);
     Route::get('/pratiche-alerts', [PracticeController::class, 'alerts']);
-    Route::post('/pratiche/{id}/schedule-delete', [PracticeController::class, 'scheduleDelete']);
 });

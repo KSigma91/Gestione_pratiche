@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 use App\Models\Practice;
+use App\Jobs\DeletePractice;
 use Carbon\Carbon;
 
 use Illuminate\Http\Request;
@@ -37,8 +38,8 @@ class PracticeController extends Controller
             'codice' => 'required|string|max:100',
             'cliente_nome' => 'required|string|max:255',
             'tipo_pratica' => 'required|string|max:100',
-            'data_arrivo' => 'required|date',
-            'data_scadenza' => 'nullable|date',
+            'data_arrivo' => 'required|date_format:Y-m-d\TH:i',
+            'data_scadenza' => 'nullable|date_format:Y-m-d\TH:i',
             'note' => 'nullable|string',
         ]);
 
@@ -95,17 +96,5 @@ class PracticeController extends Controller
             ->orderBy('data_arrivo', 'asc');
 
         return response()->json($q->get());
-    }
-
-    // Programma eliminazione: imposta delete_scheduled_at
-    public function scheduleDelete(Request $request, $id)
-    {
-        $pr = Practice::findOrFail($id);
-        $data = $request->validate([
-            'delete_scheduled_at' => 'required|date',
-        ]);
-        $pr->delete_scheduled_at = $data['delete_scheduled_at'];
-        $pr->save();
-        return response()->json(['message' => 'Eliminazione programmata.', 'pratica' => $pr]);
     }
 }

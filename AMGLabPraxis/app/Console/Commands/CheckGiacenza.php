@@ -5,7 +5,8 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 use App\Models\Practice;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Exception;
 
 class CheckGiacenza extends Command
 {
@@ -21,44 +22,51 @@ class CheckGiacenza extends Command
      *
      * @var string
      */
-    protected $description = 'Controlla pratiche in giacenza >= 15 giorni e marca alert; esegue eliminazioni programmate.';
+    protected $description = 'Controlla le pratiche per gli alert di giacenza e processa le eliminazioni programmate';
 
-    /**
-     * Execute the console command.
-     *
-     * @return int
-     */
+    public function __construct()
+    {
+        parent::__construct();
+    }
+
     public function handle()
     {
-        $cutoff = Carbon::now()->subDays(15)->toDateString();
+        $now = \Carbon\Carbon::now('UTC');
+        $this->info("Now UTC: " . $now->toDateTimeString());
 
-        $pratiche = Practice::where('stato', 'in_giacenza')
-            ->whereDate('data_arrivo', '<=', $cutoff)
-            ->where('alerted', 0)
-            ->get();
+        try {
+            $toDelete = \App\Models\Practice::withTrashed()
+                ->whereNotNull('delete_scheduled_at')
+                ->where('delete_scheduled_at', '<=', $now->toDateTimeString())
+                ->get();
 
-        foreach ($pratiche as $p) {
-            $p->alerted = 1;
-            $p->save();
-            // Log o creazione record in pratiche_alerts
-            DB::table('pratiche_alerts')->insert([
-                'pratica_id' => $p->id,
-                'alerted_at' => Carbon::now()->toDateTimeString(),
-                'note' => 'Alert automatico: giacenza >= 15 giorni'
-            ]);
-            $this->info('Alert creato per pratica id='.$p->id.' codice='.$p->codice);
+        } catch (\Exception $e) {
+            Log::error("CheckGiacenza: errore fetching pratiche da eliminare programmato - " . $e->getMessage());
+            $this->error("Errore fetch pratiche: " . $e->getMessage());
+            return 1;
         }
 
-        // Esegui eliminazioni programmate
-        $toDelete = Practice::whereNotNull('delete_scheduled_at')
-            ->where('delete_scheduled_at', '<=', Carbon::now())
-            ->get();
+        if ($toDelete->isEmpty()) {
+            $this->info("Numero di pratiche da eliminare: 0");
+            Log::info("CheckGiacenza: nessuna pratica programmate <= now ({$now})");
+        } else {
+            $this->info("Trovate {$toDelete->count()} pratiche da eliminare programmate");
+            foreach ($toDelete as $p) {
+                $this->info("→ id={$p->id}, codice={$p->codice}, delete_scheduled_at={$p->delete_scheduled_at}");
+                Log::info("About to forceDelete id={$p->id} codice={$p->codice}");
 
-        foreach ($toDelete as $d) {
-            $this->info('Eliminazione programmata: prat. id='.$d->id.' codice='.$d->codice);
-            $d->forceDelete();
+                try {
+                    $p->forceDelete();
+                    $this->info("Eliminata definitivamente id={$p->id} codice={$p->codice}");
+                    Log::info("Eliminata definitivamente id={$p->id} codice={$p->codice}");
+                } catch (\Exception $e2) {
+                    $this->error("Errore elim. id={$p->id}: " . $e2->getMessage());
+                    Log::error("Errore forceDelete id={$p->id} codice={$p->codice} - " . $e2->getMessage());
+                }
+            }
         }
 
+        $this->info("CheckGiacenza terminato alle " . \Carbon\Carbon::now());
         return 0;
     }
 }

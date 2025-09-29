@@ -25,6 +25,8 @@
     },
     "dependencies": {
         "5": "^0.0.1",
-        "@popperjs/core": "^2.11.8"
+        "@popperjs/core": "^2.11.8",
+        "air-datepicker": "^3.6.0",
+        "tingle.js": "^0.16.0"
     }
 }
