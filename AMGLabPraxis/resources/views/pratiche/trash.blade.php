@@ -43,13 +43,13 @@
                                     <form action="{{ route('admin.pratiche.restore', $p->id) }}" method="POST">
                                         @csrf
                                         <button type="submit" class="btn btn-success" title="Ripristina">
-                                            <i class="fas fa-undo"></i>
+                                            <i class="fas fa-undo text-white"></i>
                                         </button>
                                     </form>
                                     <form action="{{ route('admin.pratiche.force-delete', $p->id) }}" method="POST">
                                         @csrf
                                         <button type="submit" class="btn btn-danger" title="Elimina definitivamente">
-                                            <i class="fas fa-trash"></i>
+                                            <i class="fas fa-trash text-white"></i>
                                         </button>
                                     </form>
                                 </div>

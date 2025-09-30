@@ -8,7 +8,7 @@
     </div>
 
     <div class="table-responsive">
-        <table class="table table-striped table-hover table-sm">
+        <table class="table table-striped table-sm">
             <thead class="table-light">
                 <tr>
                     <th>#</th>
@@ -18,7 +18,7 @@
                     <th>Caso</th>
                     <th>Stato</th>
                     <th>Arrivo</th>
-                    <th>Azioni</th>
+                    {{-- <th>Azioni</th> --}}
                 </tr>
             </thead>
             <tbody>
@@ -54,9 +54,9 @@
                           -
                         @endif
                     </td>
-                    <td>
-                        {{-- Azioni: modifica, cestino, elimina, ecc --}}
-                    </td>
+                    {{-- <td>
+                        Azioni: modifica, cestino, elimina, ecc
+                    </td> --}}
                 </tr>
                 @endforeach
             </tbody>

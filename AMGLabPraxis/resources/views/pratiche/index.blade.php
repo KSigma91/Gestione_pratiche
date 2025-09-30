@@ -4,14 +4,14 @@
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h3>Lista Pratiche</h3>
     <a class="btn btn-outline-success" href="{{ route('admin.pratiche.create') }}" title="Aggiungiere pratica" aria-label="Aggiungiere pratica"><i class="fas fa-plus me-1"></i> Aggiungi pratica</i></a>
-    <a class="btn btn-primary" href="#" onclick="location.reload();"><i class="fas fa-sync me-2"></i>Aggiorna</a>
+    <a class="btn btn-primary text-white" href="#" onclick="location.reload();"><i class="fas fa-sync me-2"></i>Aggiorna</a>
 </div>
 
 <form method="GET" class="form-inline mb-3">
     <input type="text" name="cliente" class="form-control mr-2 my-2" placeholder="Cliente" value="{{ request('cliente') }}">
     <select name="stato" class="form-select mr-2 my-2">
         <option value="tutti" {{ request('stato') == 'tutti' ? 'selected' : '' }}>Tutti gli stati</option>
-        {{-- <option value="in_giacenza" {{ request('stato') == 'in_giacenza' ? 'selected':'' }}>In giacenza</option> --}}
+        <option value="in_giacenza" {{ request('stato') == 'in_giacenza' ? 'selected':'' }}>In giacenza</option>
         <option value="in_lavorazione" {{ request('stato') == 'in_lavorazione' ? 'selected':'' }}>In lavorazione</option>
         <option value="completata" {{ request('stato') == 'completata' ? 'selected':'' }}>Completata</option>
         <option value="annullata" {{ request('stato') == 'annullata' ? 'selected':'' }}>Annullata</option>
@@ -84,7 +84,7 @@
 <!-- Eliminazione definitiva -->
                 <form action="{{ route('admin.pratiche.force-delete', $p->id) }}" method="POST" style="display:inline-block;">
                     @csrf
-                    <button class="btn btn-sm btn-danger btn-action icon-btn my-1" type="submit" data-action="eliminazione" title="Elimina definitivamente" aria-label="Elimina definitivamente">
+                    <button class="btn btn-sm btn-danger btn-action icon-btn my-1 text-white" type="submit" data-action="eliminazione" title="Elimina definitivamente" aria-label="Elimina definitivamente">
                         <i class="fas fa-minus"></i>
                     </button>
                 </form>

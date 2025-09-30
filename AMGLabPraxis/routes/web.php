@@ -58,4 +58,10 @@ Route::middleware('auth')->group(function () {
     // Archivio per anno e mese
     Route::get('/admin/pratiche/archivio', [AdminController::class, 'archiveIndex'])->name('admin.pratiche.archive');
     Route::get('/admin/pratiche/archivio/{year}/{month}', [AdminController::class, 'archiveView'])->name('admin.pratiche.archive.view');
+
+    // export per anno (CSV, Excel, Word, PDF)
+    Route::get('/admin/pratiche/esporta/{year}/csv', 'AdminController@exportYearCsv')->name('admin.pratiche.export.year.csv');
+    Route::get('/admin/pratiche/esporta/{year}/excel', 'AdminController@exportYearExcel')->name('admin.pratiche.export.year.excel');
+    Route::get('/admin/pratiche/esporta/{year}/word', 'AdminController@exportYearWord')->name('admin.pratiche.export.year.word');
+    Route::get('/admin/pratiche/esporta/{year}/pdf', 'AdminController@exportYearPdf')->name('admin.pratiche.export.year.pdf');
 });

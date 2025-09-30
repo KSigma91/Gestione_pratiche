@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Storage;
+use Knp\Snappy\Pdf;
 
 class AdminController extends Controller
 {
@@ -157,7 +159,8 @@ class AdminController extends Controller
     {
         // Raggruppa pratiche per anno e mese, contando quantità
         $cacheKey = 'pratiche_archive_summary';
-        $archive = Cache::remember($cacheKey, now()->addMinutes(10), function () {
+
+        $archive = Cache::remember($cacheKey, now()->addMinutes(1), function () { // addMinutes 10
             return DB::table('pratiche')
                 ->select(DB::raw('YEAR(data_arrivo) as year'),
                         DB::raw('MONTH(data_arrivo) as month'),
@@ -170,6 +173,7 @@ class AdminController extends Controller
         });
 
         Carbon::setLocale('it');
+
         return view('pratiche.archive_index', compact('archive'));
     }
 
@@ -182,4 +186,137 @@ class AdminController extends Controller
 
         return view('pratiche.archive_view', compact('year', 'month', 'pratiche'));
     }
+
+    /**
+     * Export CSV: stream per evitare memory spikes
+     */
+    public function exportYearCsv($year)
+    {
+        // validazione semplice
+        if (!ctype_digit($year)) {
+            return redirect()->back()->with('error', 'Anno non valido.');
+        }
+
+        $filename = "pratiche_{$year}.csv";
+
+        $query = Practice::whereYear('data_arrivo', $year)->orderBy('data_arrivo', 'asc');
+
+        $callback = function () use ($query) {
+            $out = fopen('php://output', 'w');
+            // intestazione CSV
+            fputcsv($out, ['ID','Codice','Cliente','Tipo','Caso','Stato','Data Arrivo','Data Scadenza','Note']);
+
+            // chunk per efficienza
+            $query->chunk(200, function($rows) use ($out) {
+                foreach ($rows as $r) {
+                    fputcsv($out, [
+                        $r->id,
+                        $r->codice,
+                        $r->cliente_nome,
+                        $r->tipo_pratica,
+                        $r->caso,
+                        $r->stato,
+                        optional($r->data_arrivo)->format('Y-m-d H:i'),
+                        optional($r->data_scadenza)->format('Y-m-d H:i'),
+                        str_replace(["\r","\n"], [' ',' '], $r->note)
+                    ]);
+                }
+            });
+
+            fclose($out);
+        };
+
+        $headers = [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => "attachment; filename=\"$filename\"",
+        ];
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    /**
+     * Export Excel simple: output HTML table con header Excel (apre in Excel)
+     * (molto robusto e senza dipendenze)
+     */
+    public function exportYearExcel($year)
+    {
+        if (!ctype_digit($year)) {
+            return redirect()->back()->with('error', 'Anno non valido.');
+        }
+
+        $filename = "pratiche_{$year}.xls"; // .xls: Excel apre HTML table
+        $pratiche = Practice::whereYear('data_arrivo', $year)->orderBy('data_arrivo','asc')->get();
+
+        $html = view('pratiche.exports.table_export', compact('pratiche'))->render();
+
+        return response($html, 200, [
+            'Content-Type' => 'application/vnd.ms-excel; charset=UTF-8',
+            'Content-Disposition' => "attachment; filename=\"$filename\"",
+        ]);
+    }
+
+    /**
+     * Export Word: semplice HTML con header .doc (Word apre HTML)
+     */
+    public function exportYearWord($year)
+    {
+        if (!ctype_digit($year)) {
+            return redirect()->back()->with('error', 'Anno non valido.');
+        }
+
+        $filename = "pratiche_{$year}.doc";
+        $pratiche = Practice::whereYear('data_arrivo', $year)->orderBy('data_arrivo','asc')->get();
+
+        $html = view('pratiche.exports.word_export', compact('pratiche'))->render();
+
+        return response($html, 200, [
+            'Content-Type' => 'application/msword; charset=UTF-8',
+            'Content-Disposition' => "attachment; filename=\"$filename\"",
+        ]);
+    }
+
+    /**
+     * Export PDF: usa Snappy se installato, altrimenti fornisce la pagina HTML scaricabile
+     */
+    public function exportYearPdf($year)
+{
+    if (!ctype_digit((string)$year)) {
+        return redirect()->back()->with('error', 'Anno non valido.');
+    }
+    $pratiche = \App\Models\Practice::whereYear('data_arrivo', $year)
+        ->orderBy('data_arrivo', 'asc')
+        ->get();
+    $html = view('pratiche.exports.pdf_export', compact('pratiche', 'year'))->render();
+
+    $binaryPath = config('snappy.pdf.binary') ?: 'C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe';
+
+    // aggiungi virgolette esterne se non ci sono
+    if (strpos($binaryPath, ' ') !== false && $binaryPath[0] !== '"') {
+        $binaryPath = '"' . $binaryPath . '"';
+    }
+
+    // Debug: mostra il path e se esiste
+    if (!file_exists(trim($binaryPath, '"'))) {
+        dd("Binary non trovato", $binaryPath);
+    }
+
+    $snappy = new \Knp\Snappy\Pdf($binaryPath);
+    $snappy->setOption('page-size', 'A4');
+    $snappy->setOption('orientation', 'Landscape');
+    $snappy->setOption('encoding', 'UTF-8');
+    $snappy->setOption('enable-local-file-access', true);
+    $snappy->setOption('no-outline', true);
+
+    try {
+        $pdfContent = $snappy->getOutputFromHtml($html);
+        return response($pdfContent, 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => "attachment; filename=\"pratiche_{$year}.pdf\"",
+        ]);
+    } catch (\Exception $e) {
+        // Mostra messaggio di errore per debug
+        dd("Errore PDF: " . $e->getMessage());
+    }
+}
+
 }

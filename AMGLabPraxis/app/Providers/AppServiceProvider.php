@@ -2,10 +2,11 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\ServiceProvider;
-use Illuminate\Support\Facades\View;
-use App\Models\Practice;
 use Carbon\Carbon;
+use App\Models\Practice;
+use App\Observers\PracticeObserver;
+use Illuminate\Support\Facades\View;
+use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -43,6 +44,8 @@ class AppServiceProvider extends ServiceProvider
                 $giacenzaCount = 0;
                 $recentAlerts = collect();
             }
+
+            Practice::observe(PracticeObserver::class);
 
             $view->with('global_trash_count', $trashCount);
             $view->with('global_giacenza_count', $giacenzaCount);
