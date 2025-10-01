@@ -5,13 +5,12 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Practice;
 use Carbon\Carbon;
-use App\Jobs\DeletePractice;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
-use Knp\Snappy\Pdf;
+use Spatie\Activitylog\Models\Activity;
 
 class AdminController extends Controller
 {
@@ -155,6 +154,14 @@ class AdminController extends Controller
         }
     }
 
+    public function markNotificaLetta($id)
+    {
+        $n = \App\Models\NotificaGiacenza::findOrFail($id);
+        $n->letta = true;
+        $n->save();
+        return redirect()->back();
+    }
+
     public function archiveIndex($year = null)
     {
         // Raggruppa pratiche per anno e mese, contando quantità
@@ -279,44 +286,56 @@ class AdminController extends Controller
      * Export PDF: usa Snappy se installato, altrimenti fornisce la pagina HTML scaricabile
      */
     public function exportYearPdf($year)
-{
-    if (!ctype_digit((string)$year)) {
-        return redirect()->back()->with('error', 'Anno non valido.');
+    {
+        if (!ctype_digit((string)$year)) {
+            return redirect()->back()->with('error', 'Anno non valido.');
+        }
+        $pratiche = \App\Models\Practice::whereYear('data_arrivo', $year)
+            ->orderBy('data_arrivo', 'asc')
+            ->get();
+        $html = view('pratiche.exports.pdf_export', compact('pratiche', 'year'))->render();
+
+        $binaryPath = config('snappy.pdf.binary') ?: 'C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe';
+
+        // aggiungi virgolette esterne se non ci sono
+        if (strpos($binaryPath, ' ') !== false && $binaryPath[0] !== '"') {
+            $binaryPath = '"' . $binaryPath . '"';
+        }
+
+        // Debug: mostra il path e se esiste
+        if (!file_exists(trim($binaryPath, '"'))) {
+            dd("Binary non trovato", $binaryPath);
+        }
+
+        $snappy = new \Knp\Snappy\Pdf($binaryPath);
+        $snappy->setOption('page-size', 'A4');
+        $snappy->setOption('orientation', 'Landscape');
+        $snappy->setOption('encoding', 'UTF-8');
+        $snappy->setOption('enable-local-file-access', true);
+        $snappy->setOption('no-outline', true);
+
+        try {
+            $pdfContent = $snappy->getOutputFromHtml($html);
+            return response($pdfContent, 200, [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => "attachment; filename=\"pratiche_{$year}.pdf\"",
+            ]);
+        } catch (\Exception $e) {
+            // Mostra messaggio di errore per debug
+            dd("Errore PDF: " . $e->getMessage());
+        }
     }
-    $pratiche = \App\Models\Practice::whereYear('data_arrivo', $year)
-        ->orderBy('data_arrivo', 'asc')
-        ->get();
-    $html = view('pratiche.exports.pdf_export', compact('pratiche', 'year'))->render();
 
-    $binaryPath = config('snappy.pdf.binary') ?: 'C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe';
-
-    // aggiungi virgolette esterne se non ci sono
-    if (strpos($binaryPath, ' ') !== false && $binaryPath[0] !== '"') {
-        $binaryPath = '"' . $binaryPath . '"';
+    public function activityLogs()
+    {
+        $logs = Activity::orderBy('created_at', 'desc')->paginate(25);
+        return view('admin.logs.index', compact('logs'));
     }
 
-    // Debug: mostra il path e se esiste
-    if (!file_exists(trim($binaryPath, '"'))) {
-        dd("Binary non trovato", $binaryPath);
+    public function activityLogsPartial(Request $request)
+    {
+        // partial per modal (carica primi 25)
+        $logs = Activity::orderBy('created_at', 'desc')->limit(25)->get();
+        return view('admin.logs.partial', compact('logs'));
     }
-
-    $snappy = new \Knp\Snappy\Pdf($binaryPath);
-    $snappy->setOption('page-size', 'A4');
-    $snappy->setOption('orientation', 'Landscape');
-    $snappy->setOption('encoding', 'UTF-8');
-    $snappy->setOption('enable-local-file-access', true);
-    $snappy->setOption('no-outline', true);
-
-    try {
-        $pdfContent = $snappy->getOutputFromHtml($html);
-        return response($pdfContent, 200, [
-            'Content-Type' => 'application/pdf',
-            'Content-Disposition' => "attachment; filename=\"pratiche_{$year}.pdf\"",
-        ]);
-    } catch (\Exception $e) {
-        // Mostra messaggio di errore per debug
-        dd("Errore PDF: " . $e->getMessage());
-    }
-}
-
 }

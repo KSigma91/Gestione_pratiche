@@ -1,7 +1,7 @@
 @extends('layouts.navbar')
 
 @section('content')
-<div class="container">
+<div class="container py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h3><i class="fas fa-trash-alt me-2"></i> Cestino Pratiche</h3>
         <a class="btn btn-secondary" href="{{ route('admin.pratiche.index') }}"><i class="fas fa-arrow-left me-1"></i> Torna alla lista</a>

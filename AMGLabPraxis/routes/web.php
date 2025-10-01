@@ -54,6 +54,7 @@ Route::middleware('auth')->group(function () {
     // Other actions
     Route::post('/admin/pratiche/{id}/delete', [AdminController::class, 'destroy'])->name('admin.pratiche.delete');
     Route::post('/admin/pratiche/{id}/giacenza', [AdminController::class, 'markGiacenza'])->name('admin.pratiche.giacenza');
+    Route::post('/admin/notifiche/{id}/letta', 'AdminController@markNotificaLetta')->name('admin.notifiche.markLetta');
 
     // Archivio per anno e mese
     Route::get('/admin/pratiche/archivio', [AdminController::class, 'archiveIndex'])->name('admin.pratiche.archive');
@@ -64,4 +65,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/admin/pratiche/esporta/{year}/excel', 'AdminController@exportYearExcel')->name('admin.pratiche.export.year.excel');
     Route::get('/admin/pratiche/esporta/{year}/word', 'AdminController@exportYearWord')->name('admin.pratiche.export.year.word');
     Route::get('/admin/pratiche/esporta/{year}/pdf', 'AdminController@exportYearPdf')->name('admin.pratiche.export.year.pdf');
+
+    // Logs
+    Route::get('admin/logs', [AdminController::class, 'activityLogs'])->name('admin.logs');
+    Route::get('admin/logs/partial', [AdminController::class, 'activityLogsPartial'])->name('admin.logs.partial');
 });

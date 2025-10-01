@@ -10,7 +10,7 @@
                     <form method="POST" action="{{ route('login') }}">
                         @csrf
                         <div class="form-group">
-                            <label for="email">Email</label>
+                            <label for="email"><small>Email</small></label>
                             <input id="email" type="email" class="form-control @error('email') is-invalid @enderror"
                                     name="email" value="{{ old('email') }}" required autofocus>
                             @error('email')
@@ -18,7 +18,7 @@
                             @enderror
                         </div>
                         <div class="form-group mt-3">
-                            <label for="password">Password</label>
+                            <label for="password"><small>Password</small></label>
                             <input id="password" type="password" class="form-control @error('password') is-invalid @enderror"
                                     name="password" required>
                             @error('password')
@@ -30,7 +30,7 @@
                             <label class="form-check-label" for="remember">Ricordami</label>
                         </div>
                         <div class="form-group mb-0 mt-3">
-                            <button type="submit" class="btn btn-primary">Login</button>
+                            <button type="submit" class="btn btn-primary text-white">Login</button>
                             @if (Route::has('password.request'))
                             <a class="btn btn-link" href="{{ route('password.request') }}">Password dimenticata?</a>
                             @endif

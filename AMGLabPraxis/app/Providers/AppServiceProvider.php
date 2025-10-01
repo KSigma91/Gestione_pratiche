@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use Carbon\Carbon;
 use App\Models\Practice;
+use App\Models\NotificaGiacenza;
 use App\Observers\PracticeObserver;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
@@ -28,6 +29,18 @@ class AppServiceProvider extends ServiceProvider
     public function boot()
     {
         View::composer('*', function ($view) {
+            try {
+                $notifiche = NotificaGiacenza::where('letta', false)
+                    ->with('pratica')
+                    ->orderBy('notificata_at', 'desc')
+                    ->get();
+
+            } catch (\Exception $e) {
+                $notifiche = collect();
+            }
+
+            $view->with('global_notifiche_giacenza', $notifiche);
+
             try {
                 $trashCount = Practice::onlyTrashed()->count();
 

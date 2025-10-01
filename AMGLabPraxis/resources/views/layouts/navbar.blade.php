@@ -24,6 +24,8 @@
     <base href="{{ url('/') }}/">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
 </head>
+@include('partials.activity_button')
+@stack('scripts')
 <body>
     <nav class="navbar sticky-top navbar-expand-lg navbar-light mb-5 shadow-sm">
         <div class="container">
@@ -35,24 +37,11 @@
                         <li class="nav-item"><a class="nav-link text-white" href="{{ route('register') }}">Registrati</a></li>
                     @else
 {{-- Giacenze --}}
-                    <li class="nav-item dropdown">
-                        @include('partials.stock_dropdown')
-
-                        <div class="dropdown-menu dropdown-menu-right" aria-labelledby="giacenzaDropdown" style="min-width:300px;">
-                            <h6 class="dropdown-header">Pratiche in giacenza ≥ 15 giorni</h6>
-                            @if(($global_recent_alerts ?? collect())->count() == 0)
-                            <a class="dropdown-item">Nessuna pratica in giacenza critica</a>
-                                @else
-                                @foreach($global_recent_alerts as $a)
-                                <a class="dropdown-item" href="{{ route('admin.pratiche.index') }}?cliente={{ urlencode($a->cliente_nome) }}">
-                                    <strong>{{ $a->codice }}</strong> — {{ $a->cliente_nome }} <br><small>Arrivo: {{ $a->data_arrivo }}</small>
-                                </a>
-                                @endforeach
-                                <div class="dropdown-divider"></div>
-                                <a class="dropdown-item text-center" href="{{ route('admin.pratiche.index') }}">Vedi tutte</a>
-                                @endif
-                            </div>
+                        {{-- @include('partials.stock_dropdown') --}}
+                        <li class="nav-item">
+                            @include('partials.stock_notify_dropdown')
                         </li>
+
 {{-- Cestino --}}
                         <li class="nav-item mx-2">
                             <a class="nav-link text-white" href="{{ route('admin.pratiche.trash') }}">
@@ -61,9 +50,9 @@
                                 <i class="fas fa-trash"></i>
                             </a>
                         </li>
-{{-- Home - index --}}
+{{-- Dashboard - index --}}
                         <li class="nav-item">
-                            <a href="{{ route('admin.pratiche.index') }}" class="nav-link text-white">Home</a>
+                            <a href="{{ route('admin.pratiche.index') }}" class="nav-link text-white">Dashboard</a>
                         </li>
 {{-- Storico --}}
                         <li class="nav-item">
@@ -107,6 +96,19 @@
         }
         .icon-btn i { pointer-events: none; } /* icona non cattura click */
         .icon-btn:focus { outline: 2px solid rgba(0,123,255,.25); outline-offset: 2px; }
+
+        .log-props-compact .log-prop-line {
+            display: block;
+            max-width: 34ch;      /* lunghezza visiva, regola se vuoi più/meno spazio */
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-size: .85rem;
+            color: #333;
+        }
+        .log-props-compact .badge {
+            cursor: pointer;
+        }
     </style>
 
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>

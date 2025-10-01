@@ -30,6 +30,10 @@ class Kernel extends ConsoleKernel
                  ->withoutOverlapping()
                  ->runInBackground()
                  ->timezone(config('app.timezone'));
+
+        $schedule->command('notifiche:giacenza')->everyMinute();
+
+        $schedule->command('activitylog:clean')->daily();
     }
 
     /**
