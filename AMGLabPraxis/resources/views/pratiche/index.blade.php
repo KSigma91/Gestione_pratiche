@@ -4,8 +4,8 @@
 <div class="container py-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h3>Lista Pratiche</h3>
-        <a class="btn btn-outline-success" href="{{ route('admin.pratiche.create') }}" title="Aggiungiere pratica" aria-label="Aggiungiere pratica"><i class="fas fa-plus me-1"></i> Aggiungi pratica</i></a>
-        <a class="btn btn-primary text-white" href="#" onclick="location.reload();"><i class="fas fa-sync me-2"></i>Aggiorna</a>
+        <a class="btn btn-outline-success" href="{{ route('admin.pratiche.create') }}" title="Aggiungiere pratica" aria-label="Aggiungiere pratica"><i class="fas fa-plus me-1"></i> Aggiungi pratica</a>
+        <a class="btn btn-secondary" href="{{ route('admin.dashboard') }}"><i class="fas fa-arrow-left me-1"></i> Torna alla dashboard</a>
     </div>
 
     <form method="GET" class="form-inline mb-3">
@@ -17,7 +17,10 @@
             <option value="completata" {{ request('stato') == 'completata' ? 'selected':'' }}>Completata</option>
             <option value="annullata" {{ request('stato') == 'annullata' ? 'selected':'' }}>Annullata</option>
         </select>
-        <button class="btn btn-secondary px-4" title="Filtra" aria-label="Filtra" type="submit"><i class="fas fa-sort-amount-down"></i></button>
+        <div class="d-flex justify-content-between">
+            <button class="btn btn-secondary px-4" title="Filtra" aria-label="Filtra" type="submit"><i class="fas fa-sort-amount-down"></i></button>
+            <a class="btn btn-primary text-white" href="#" onclick="location.reload();"><i class="fas fa-sync me-2"></i>Aggiorna</a>
+        </div>
     </form>
 
     <table class="table table-light table-striped">
@@ -72,7 +75,7 @@
                     <form action="{{ route('admin.pratiche.giacenza', $p->id) }}" method="POST" style="display:inline-block; margin-right: 4px;">
                         @csrf
                         <button class="btn btn-sm btn-secondary btn-action icon-btn my-1 text-white" type="submit" data-action="giacenza" title="Metti in giacenza" aria-label="Metti in giacenza">
-                            <i class="fas fa-pause"></i>
+                            <i class="fas fa-hourglass-half" style="margin: 0 .7px"></i>
                         </button>
                     </form>
 <!-- sposta nel cestino -->

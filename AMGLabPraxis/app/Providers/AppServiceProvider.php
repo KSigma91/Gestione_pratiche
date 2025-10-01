@@ -28,6 +28,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
+        // imposta la locale per Carbon su italiano
+        Carbon::setLocale('it');
+
+        // opzionale: imposta timezone se non già impostata
+        date_default_timezone_set(config('app.timezone', 'Europe/Rome'));
+
         View::composer('*', function ($view) {
             try {
                 $notifiche = NotificaGiacenza::where('letta', false)

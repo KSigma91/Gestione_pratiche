@@ -338,4 +338,71 @@ class AdminController extends Controller
         $logs = Activity::orderBy('created_at', 'desc')->limit(25)->get();
         return view('admin.logs.partial', compact('logs'));
     }
+
+    public function dashboard(Request $request)
+    {
+        // KPI numerici
+        $totale = Practice::count();
+        $inGiacenza = Practice::where('stato', 'in_giacenza')->count();
+        $inLavorazione = Practice::where('stato', 'in_lavorazione')->count();
+        $completate = Practice::where('stato', 'completata')->count();
+
+        // Dati per grafico linea (ultimi 12 mesi, entrate in giacenza)
+        $oggi = Carbon::now();
+        $inizio12 = (clone $oggi)->subMonths(11)->startOfMonth();
+
+        $entrateGiacenza = Practice::select(
+                DB::raw("YEAR(data_arrivo) as anno"),
+                DB::raw("MONTH(data_arrivo) as mese"),
+                DB::raw("COUNT(*) as totale")
+            )
+            ->where('stato', 'in_giacenza')
+            ->whereDate('data_arrivo', '>=', $inizio12)
+            ->groupBy('anno', 'mese')
+            ->orderBy('anno', 'asc')
+            ->orderBy('mese', 'asc')
+            ->get();
+
+        $period = [];
+        $labels = [];
+        $datasets = [];
+
+        for ($i = 0; $i < 12; $i++) {
+            $m = (clone $inizio12)->addMonths($i);
+            $period[] = $m;
+            $labels[] = $m->translatedFormat('M Y'); // es. "ott 2024" (Carbon::setLocale('it') presente in AppServiceProvider)
+            $datasets[] = 0;
+        }
+
+        foreach ($entrateGiacenza as $row) {
+            foreach ($period as $idx => $m) {
+                if ($m->year == $row->anno && $m->month == $row->mese) {
+                    $datasets[$idx] = (int)$row->totale;
+                    break;
+                }
+            }
+        }
+
+        // distribuzione stato per doughnut
+        $statiCount = Practice::select('stato', DB::raw('COUNT(*) as totale'))
+            ->groupBy('stato')
+            ->get()
+            ->pluck('totale','stato')
+            ->toArray();
+
+        // recenti pratiche create / modificate
+        $recent = Practice::orderBy('updated_at','desc')->limit(6)->get(['id','codice','cliente_nome','stato','updated_at']);
+
+        // ultime attività (facoltativo, se usi activitylog)
+        $recentActivities = [];
+
+        if (class_exists(Activity::class)) {
+            $recentActivities = Activity::orderBy('created_at','desc')->limit(5)->get();
+        }
+
+        return view('admin.dashboard', compact(
+            'totale','inGiacenza','inLavorazione','completate',
+            'labels','datasets','statiCount','recent','recentActivities'
+        ));
+    }
 }

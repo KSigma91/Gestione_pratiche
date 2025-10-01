@@ -16,6 +16,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Racing+Sans+One&display=swap" rel="stylesheet">
     <!-- Tingle.js CSS -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/tingle/0.8.4/tingle.min.css" rel="stylesheet">
     <!-- Tingle.js JS -->
@@ -29,7 +30,7 @@
 <body>
     <nav class="navbar sticky-top navbar-expand-lg navbar-light mb-5 shadow-sm">
         <div class="container">
-            <a class="navbar-brand text-white fs-3 p-0" href="{{ url('/') }}"><span style="font-family: 'Markazi Text'">AMG Lab</span> <span style="font-family: 'Bebas Neue'; font-size: 1.4rem">Praxis</span></a>
+            <a class="navbar-brand text-white fs-3 p-0" href="{{ url('/') }}"><span style="font-family: 'Markazi Text'">AMG Lab</span> <span style="font-family: 'Racing Sans One'; font-size: 1.4rem">Praxis</span></a>
             <div class="collapse navbar-collapse d-flex justify-content-end">
                 <ul class="navbar-nav">
                     @guest
@@ -52,7 +53,7 @@
                         </li>
 {{-- Dashboard - index --}}
                         <li class="nav-item">
-                            <a href="{{ route('admin.pratiche.index') }}" class="nav-link text-white">Dashboard</a>
+                            <a href="{{ route('admin.dashboard') }}" class="nav-link text-white">Dashboard</a>
                         </li>
 {{-- Storico --}}
                         <li class="nav-item">

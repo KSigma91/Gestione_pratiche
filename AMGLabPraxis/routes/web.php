@@ -25,20 +25,22 @@ Route::get('/', function () {
     return redirect()->route('login');
 });
 
-Route::get('/home', function () {
-    return redirect()->route('admin.pratiche.index');
-})->name('home');
+// Route::get('/home', function () {
+//     return redirect()->route('admin.pratiche.index');
+// })->name('home');
 
 // Rotta per mettere in giacenza una singola pratica
 //Route::post('/admin/pratiche/{id}/giacenza', [AdminController::class, 'markGiacenza'])->name('admin.pratiche.giacenza');
 
 // mostra la partial di esempio (opzionale: utile per debug)
-Route::get('/admin/giacenza/dropdown', function () {
-    return view('partials.stock_dropdown');
-})->name('admin.giacenza.dropdown');
+// Route::get('/admin/giacenza/dropdown', function () {
+//     return view('partials.stock_dropdown');
+// })->name('admin.giacenza.dropdown');
 
 
 Route::middleware('auth')->group(function () {
+    Route::get('/admin/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
+
     // Pratiche admin - Blade
     Route::get('/admin/pratiche', [AdminController::class, 'index'])->name('admin.pratiche.index');
     Route::get('/admin/pratiche/nuova-pratica', [AdminController::class, 'create'])->name('admin.pratiche.create');
