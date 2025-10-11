@@ -3,7 +3,6 @@
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\AdminController;
-use App\Models\Practice;
 
 /*
 |--------------------------------------------------------------------------
@@ -25,50 +24,49 @@ Route::get('/', function () {
     return redirect()->route('login');
 });
 
-// Route::get('/home', function () {
-//     return redirect()->route('admin.pratiche.index');
-// })->name('home');
+Route::get('/home', function () {
+    return redirect()->route('admin.dashboard');
+})->name('home');
 
-// Rotta per mettere in giacenza una singola pratica
-//Route::post('/admin/pratiche/{id}/giacenza', [AdminController::class, 'markGiacenza'])->name('admin.pratiche.giacenza');
+Route::middleware('auth', 'no.cache')->prefix('admin')->name('admin.')->group(function () {
+    // Dashboard
+    Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
 
-// mostra la partial di esempio (opzionale: utile per debug)
-// Route::get('/admin/giacenza/dropdown', function () {
-//     return view('partials.stock_dropdown');
-// })->name('admin.giacenza.dropdown');
+    // Sessioni admin
+    Route::get('/sessions', 'SessionController@index')->name('sessions.index');
+    Route::post('/sessions/kill/{sessionId}', 'SessionController@destroy')->name('sessions.destroy');
+    Route::post('/sessions/kill-others', 'SessionController@destroyOthers')->name('sessions.destroy.others');
 
+    // Pratiche admin
+    Route::get('/pratiche', [AdminController::class, 'index'])->name('pratiche.index');
+    Route::get('/pratiche/nuova-pratica', [AdminController::class, 'create'])->name('pratiche.create');
+    Route::post('/pratiche', [AdminController::class, 'store'])->name('pratiche.store');
+    Route::get('/pratiche/{id}/modifica', [AdminController::class, 'edit'])->name('pratiche.edit');
+    Route::put('/pratiche/{id}', [AdminController::class, 'update'])->name('pratiche.update');
+    Route::get('/pratiche/{id}/visualizza-pratica', [AdminController::class, 'show'])->name('pratiche.show');
 
-Route::middleware('auth')->group(function () {
-    Route::get('/admin/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
+    // Cestino
+    Route::get('/pratiche/cestino', [AdminController::class, 'trash'])->name('pratiche.trash');
+    Route::post('/pratiche/{id}/ripristina', [AdminController::class, 'restore'])->name('pratiche.restore');
+    Route::post('/pratiche/{id}/force-delete', [AdminController::class, 'forceDelete'])->name('pratiche.force-delete');
 
-    // Pratiche admin - Blade
-    Route::get('/admin/pratiche', [AdminController::class, 'index'])->name('admin.pratiche.index');
-    Route::get('/admin/pratiche/nuova-pratica', [AdminController::class, 'create'])->name('admin.pratiche.create');
-    Route::post('/admin/pratiche', [AdminController::class, 'store'])->name('admin.pratiche.store');
-    Route::get('/admin/pratiche/{id}/modifica', [AdminController::class, 'edit'])->name('admin.pratiche.edit');
-    Route::put('/admin/pratiche/{id}', [AdminController::class, 'update'])->name('admin.pratiche.update');
-
-    // cestino
-    Route::get('/admin/pratiche/cestino', [AdminController::class, 'trash'])->name('admin.pratiche.trash');
-    Route::post('/admin/pratiche/{id}/ripristina', [AdminController::class, 'restore'])->name('admin.pratiche.restore');
-    Route::post('/admin/pratiche/{id}/force-delete', [AdminController::class, 'forceDelete'])->name('admin.pratiche.force-delete');
-
-    // Other actions
-    Route::post('/admin/pratiche/{id}/delete', [AdminController::class, 'destroy'])->name('admin.pratiche.delete');
-    Route::post('/admin/pratiche/{id}/giacenza', [AdminController::class, 'markGiacenza'])->name('admin.pratiche.giacenza');
-    Route::post('/admin/notifiche/{id}/letta', 'AdminController@markNotificaLetta')->name('admin.notifiche.markLetta');
+    // Altre azioni
+    Route::post('/pratiche/{id}/delete', [AdminController::class, 'destroy'])->name('pratiche.delete');
+    Route::post('/pratiche/{id}/giacenza', [AdminController::class, 'markGiacenza'])->name('pratiche.giacenza');
+    Route::post('/pratiche/{id}/rimuovi-giacenza', [AdminController::class, 'removeGiacenza'])->name('pratiche.remove_giacenza');
+    Route::post('/notifiche/{id}/letta', 'AdminController@markNotificaLetta')->name('notifiche.markLetta');
 
     // Archivio per anno e mese
-    Route::get('/admin/pratiche/archivio', [AdminController::class, 'archiveIndex'])->name('admin.pratiche.archive');
-    Route::get('/admin/pratiche/archivio/{year}/{month}', [AdminController::class, 'archiveView'])->name('admin.pratiche.archive.view');
+    Route::get('/pratiche/archivio', [AdminController::class, 'archiveIndex'])->name('pratiche.archive');
+    Route::get('/pratiche/archivio/{year}/{month}', [AdminController::class, 'archiveView'])->name('pratiche.archive.view');
 
-    // export per anno (CSV, Excel, Word, PDF)
-    Route::get('/admin/pratiche/esporta/{year}/csv', 'AdminController@exportYearCsv')->name('admin.pratiche.export.year.csv');
-    Route::get('/admin/pratiche/esporta/{year}/excel', 'AdminController@exportYearExcel')->name('admin.pratiche.export.year.excel');
-    Route::get('/admin/pratiche/esporta/{year}/word', 'AdminController@exportYearWord')->name('admin.pratiche.export.year.word');
-    Route::get('/admin/pratiche/esporta/{year}/pdf', 'AdminController@exportYearPdf')->name('admin.pratiche.export.year.pdf');
+    // Esporta per anno (CSV, Excel, Word, PDF)
+    Route::get('/pratiche/esporta/{year}/csv', 'AdminController@exportYearCsv')->name('pratiche.export.year.csv');
+    Route::get('/pratiche/esporta/{year}/excel', 'AdminController@exportYearExcel')->name('pratiche.export.year.excel');
+    Route::get('/pratiche/esporta/{year}/word', 'AdminController@exportYearWord')->name('pratiche.export.year.word');
+    Route::get('/pratiche/esporta/{year}/pdf', 'AdminController@exportYearPdf')->name('pratiche.export.year.pdf');
 
-    // Logs
-    Route::get('admin/logs', [AdminController::class, 'activityLogs'])->name('admin.logs');
-    Route::get('admin/logs/partial', [AdminController::class, 'activityLogsPartial'])->name('admin.logs.partial');
+    // Logs attività
+    Route::get('/logs', [AdminController::class, 'activityLogs'])->name('logs');
+    Route::get('/logs/partial', [AdminController::class, 'activityLogsPartial'])->name('logs.partial');
 });

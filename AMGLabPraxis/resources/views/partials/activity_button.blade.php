@@ -11,11 +11,12 @@
     display:flex;
     align-items:center;
     justify-content:center;
+    background: #63A4B0;
     box-shadow: 0 6px 18px rgba(0,0,0,0.15);
 }
 </style>
 
-<button id="openActivityLog" class="btn btn-info activity-log-button" title="Visualizza log attività" type="button">
+<button id="openActivityLog" class="btn activity-log-button" title="Visualizza log attività" type="button">
     <i class="fas fa-history"></i>
 </button>
 

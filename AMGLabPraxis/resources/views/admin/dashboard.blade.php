@@ -2,9 +2,10 @@
 
 @section('content')
 <style>
-/* Stili dashboard moderni */
-/* body { font-family: 'Inter', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; } */
-
+body {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' opacity='0.2'%3E%3Crect width='20' height='20' fill='%23ffffff'/%3E%3Crect x='20' y='20' width='20' height='20' fill='%23ffffff'/%3E%3C/svg%3E");
+    background-color: #f8f9fa;
+}
 .kpi-card {
     border: 0;
     border-radius: 12px;
@@ -29,8 +30,21 @@
 .chart-card {
     height: 500px;
     position: relative;
+
+
 }
 
+@media screen and (max-width: 767px) {
+    .chart-card {
+        height: 830px;
+    }
+}
+
+@media screen and (max-width: 500px) {
+    .chart-card {
+        height: 750px;
+    }
+}
 .chart-card canvas {
     width: 100% !important;
     height: 100% !important;
@@ -55,17 +69,17 @@
 }
 </style>
 
-<div class="container py-4">
-    <div class="d-flex justify-content-between align-items-start mb-3">
+<div class="py-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-start mb-3">
         <div>
             <h2 class="mb-2">Dashboard <span class="text-dark fs-5">— Panoramica</span></h2>
             <div class="small-muted">Ultimo aggiornamento: {{ \Carbon\Carbon::now()->setTimezone(config('app.timezone'))->format('d/m/Y H:i') }}</div>
         </div>
-        <div class="d-flex align-items-center gap-2">
+        <div class="d-flex justify-content-end align-items-center gap-2 my-3 my-md-0">
             <a href="{{ route('admin.pratiche.index') }}" class="btn btn-outline-primary btn-sm">
                 <i class="fas fa-list me-1"></i> Lista pratiche
             </a>
-            <a href="{{ route('admin.pratiche.create') }}" class="btn btn-light btn-sm text-dark">
+            <a href="{{ route('admin.pratiche.create') }}" class="btn btn-sm text-white" style="background: dodgerblue ">
                 <i class="fas fa-plus me-1"></i> Nuova Pratica
             </a>
         </div>
@@ -171,7 +185,7 @@
                         <div class="list-group-item">
                             <div class="d-flex justify-content-between">
                                 <div>
-                                    <a href="{{ route('admin.pratiche.edit', $r->id) }}" class="fw-bold">{{ $r->codice }}</a>
+                                    <a href="{{ route('admin.pratiche.edit', $r->id) }}" class="fw-bold text-decoration-none">{{ $r->codice }}</a>
                                     <div class="small-muted">{{ $r->cliente_nome }}</div>
                                 </div>
                                 <div class="text-end small-muted">

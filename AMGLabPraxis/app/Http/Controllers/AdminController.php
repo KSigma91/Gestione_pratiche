@@ -24,25 +24,73 @@ class AdminController extends Controller
     {
         $q = Practice::query();
 
-        // Filtro per stato solo se il valore è presente e diverso da "tutti" (o valore definito per "tutti")
+        // INPUT cliente: può contenere testo e/o anni (es. "Rossi 2023")
+        $clienteInput = trim($request->input('cliente', ''));
+
+        $years = [];
+        $textTokens = [];
+
+        if ($clienteInput !== '') {
+            // split su spazi
+            $tokens = preg_split('/\s+/', $clienteInput);
+            foreach ($tokens as $t) {
+                // se token è esattamente 4 cifre, lo interpretiamo come anno
+                if (preg_match('/^\d{4}$/', $t)) {
+                    $years[] = (int) $t;
+                } else {
+                    $textTokens[] = $t;
+                }
+            }
+        }
+        // testo rimanente per ricerca cliente
+        $clienteText = trim(implode(' ', $textTokens));
+
+        if ($clienteText !== '') {
+            $q->where('cliente_nome', 'like', '%' . $clienteText . '%');
+        }
+
+        if (!empty($years)) {
+            $q->where(function ($sub) use ($years) {
+                foreach ($years as $i => $year) {
+                    $sub->{$i === 0 ? 'whereYear' : 'orWhereYear'}('data_arrivo', $year);
+                }
+            });
+        }
+
+        // --- Filtro stato ---
         if ($request->filled('stato') && $request->input('stato') !== 'tutti') {
             $q->where('stato', $request->input('stato'));
         }
 
-        if ($request->has('cliente') && $request->input('cliente') !== '') {
-            $q->where('cliente_nome', 'like', '%' . $request->input('cliente') . '%');
+        // --- Ordinamenti ---
+        $ordinato = false;
+
+        if ($request->has('ordinamento') && $request->ordinamento) {
+            $direction = $request->ordinamento === 'asc' ? 'asc' : 'desc';
+            $q->orderBy('codice', $direction);
+            $ordinato = true;
         }
 
-        $pratiche = $q->orderBy('data_arrivo', 'desc')
-                    ->paginate(15)
-                    ->appends($request->except('page'));
+        if ($request->has('ordinamento_data') && $request->ordinamento_data) {
+            $direction = $request->ordinamento_data === 'asc' ? 'asc' : 'desc';
+            $q->orderBy('data_arrivo', $direction);
+            $ordinato = true;
+        }
+
+        // --- Ordinamento di default SOLO se non specificato altro ---
+        if (!$ordinato) {
+            $q->orderBy('data_arrivo', 'desc');
+        }
+
+        $pratiche = $q->paginate(15)->appends($request->except('page'));
 
         return view('pratiche.index', compact('pratiche'));
     }
 
     public function create()
     {
-        return view('pratiche.create');
+        $pr = new Practice();
+        return view('pratiche.create', compact('pr'));
     }
 
     public function store(Request $request)
@@ -52,10 +100,33 @@ class AdminController extends Controller
             'caso' => 'required|string|max:255',
             'tipo_pratica' => [ 'required', Rule::in(['Tribunale Penale', 'Tribunale Civile', 'Giudice di Pace', 'Tar'])],
             'stato' => 'required|in:in_giacenza,in_lavorazione,completata,annullata',
+            'stato_fattura'  => 'required|in:emessa,non_emessa',
+            'stato_pagamento'=> 'required|in:pagato,non_pagato',
             'data_arrivo' => 'required|date',
             'data_scadenza' => 'nullable|date',
             'note' => 'nullable|string',
         ]);
+
+        // normalizza data_arrivo se usi input datetime-local (esempio)
+        if (!empty($data['data_arrivo']) && preg_match('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/', $data['data_arrivo'])) {
+            // converti Y-m-d\TH:i in timestamp
+            $data['data_arrivo'] = Carbon::createFromFormat('Y-m-d\TH:i', $data['data_arrivo'])->toDateTimeString();
+        }
+
+        $force = $request->input('force_duplicate') ? true : false;
+        $duplicateWindowDays = (int) (config('pratiche.duplicate_days', 1) ?: 1);
+
+        // cerca duplicati
+        $duplicates = Practice::findPotentialDuplicates($data, $duplicateWindowDays);
+
+        if ($duplicates->isNotEmpty() && !$force) {
+            // blocca la creazione e torna indietro con i duplicati nella session
+            return redirect()->back()
+                ->withInput()
+                ->with('duplicate_found', true)
+                ->with('duplicate_list', $duplicates)
+                ->with('duplicate_message', 'Sono state trovate pratiche simili. Controlla prima di creare una nuova pratica. Se vuoi creare comunque, premi "Crea comunque".');
+        }
 
         // (la colonna 'codice' nella migration è NOT NULL; quindi forniamo un placeholder unico).
         $tmpCodice = 'PRAT-TMP-' . uniqid();
@@ -64,7 +135,7 @@ class AdminController extends Controller
         $dataWithTmp = $data;
         $dataWithTmp['codice'] = $tmpCodice;
 
-        $pr = \App\Models\Practice::create($dataWithTmp);
+        $pr = Practice::create($dataWithTmp);
 
         // Ora abbiamo l'id assegnato dal DB. Generiamo il codice definitivo basato sull'id.
         $finalCodice = sprintf('PRAT-%06d', $pr->id);
@@ -92,15 +163,42 @@ class AdminController extends Controller
             'caso' => 'required|string|max:255',
             'tipo_pratica' => [ 'required', Rule::in(['Tribunale Penale', 'Tribunale Civile', 'Giudice di Pace', 'Tar'])],
             'stato' => 'required|in:in_giacenza,in_lavorazione,completata,annullata',
+            'stato_fattura'  => 'required|in:emessa,non_emessa',
+            'stato_pagamento'=> 'required|in:pagato,non_pagato',
             'data_arrivo' => 'required|date',
             'data_scadenza' => 'nullable|date',
             'note' => 'nullable|string',
         ]);
 
+        if (!empty($data['data_arrivo']) && preg_match('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/', $data['data_arrivo'])) {
+            $data['data_arrivo'] = Carbon::createFromFormat('Y-m-d\TH:i', $data['data_arrivo'])->toDateTimeString();
+        }
+
+        $force = $request->input('force_duplicate') ? true : false;
+        $duplicateWindowDays = (int) (config('pratiche.duplicate_days', 1) ?: 1);
+
+        // cerca duplicati escludendo l'attuale ID
+        $duplicates = Practice::findPotentialDuplicates($data, $duplicateWindowDays, $pr->id);
+
+        if ($duplicates->isNotEmpty() && !$force) {
+            return redirect()->back()
+                ->withInput()
+                ->with('duplicate_found', true)
+                ->with('duplicate_list', $duplicates)
+                ->with('duplicate_message', 'Sono state trovate pratiche simili. Se vuoi aggiornare comunque, premi "Aggiorna comunque".');
+        }
+
         $pr->update($data);
 
         return redirect()->route('admin.pratiche.index')->with('status', 'Pratica aggiornata con successo.');
     }
+
+    public function show($id)
+    {
+        $pratica = Practice::withTrashed()->findOrFail($id);
+        return view('pratiche.show', compact('pratica'));
+    }
+
 
     // Soft delete -> move to Cestino
     public function destroy($id)
@@ -142,15 +240,46 @@ class AdminController extends Controller
 
     public function markGiacenza($id)
     {
-        $pr = \App\Models\Practice::findOrFail($id);
+        $pr = Practice::findOrFail($id);
         $pr->stato = 'in_giacenza';
         $pr->data_arrivo = now();  // oppure lascia la data già presente se preferisci
         $pr->save();
 
         return redirect()->back()->with('status', 'Pratica #' . $pr->id . ' messa in giacenza.');
 
-        if ($pr->stato === 'in_giacenza') {
-            return redirect()->back()->with('warning', 'La pratica è già in giacenza.');
+        // if ($pr->stato === 'in_giacenza') {
+        //     return redirect()->back()->with('warning', 'La pratica è già in giacenza.');
+        // }
+    }
+
+    public function removeGiacenza(Request $request, $id)
+    {
+        // carica la pratica anche se soft-deleted (modifica se non vuoi)
+        $pratica = Practice::withTrashed()->findOrFail($id);
+
+        // Controlla che sia effettivamente in giacenza
+        if ($pratica->stato !== 'in_giacenza') {
+            return redirect()->back()->with('warning', 'La pratica non risulta attualmente in giacenza.');
+        }
+
+        // stato target: puoi personalizzarlo tramite request (es. target_state=in_lavorazione)
+        $targetState = $request->input('target_state', 'in_lavorazione');
+
+        try {
+            $oldState = $pratica->stato;
+            $pratica->stato = $targetState;
+            $pratica->save();
+
+            // (opzionale) registra attività se usi activity log
+            if (method_exists($pratica, 'tapActivity')) {
+                // se usi spatie/activitylog o log personalizzato, puoi aggiungere qui
+            }
+
+            return redirect()->back()->with('success', "Pratica {$pratica->codice} rimossa dalla giacenza. Stato aggiornato: {$targetState}.");
+        } catch (\Exception $e) {
+            // log dell'errore per debug
+            Log::error('Errore removeGiacenza: '.$e->getMessage(), ['pratica_id'=>$id]);
+            return redirect()->back()->with('error', 'Si è verificato un errore nel rimuovere la pratica dalla giacenza.');
         }
     }
 
@@ -247,18 +376,36 @@ class AdminController extends Controller
      */
     public function exportYearExcel($year)
     {
-        if (!ctype_digit($year)) {
+        if (!ctype_digit((string) $year)) {
             return redirect()->back()->with('error', 'Anno non valido.');
         }
 
-        $filename = "pratiche_{$year}.xls"; // .xls: Excel apre HTML table
-        $pratiche = Practice::whereYear('data_arrivo', $year)->orderBy('data_arrivo','asc')->get();
+        $filename = "pratiche_{$year}.xls"; // Excel aprirà l'HTML come foglio
 
-        $html = view('pratiche.exports.table_export', compact('pratiche'))->render();
+        // prendi le pratiche
+        $pratiche = Practice::whereYear('data_arrivo', $year)
+                    ->orderBy('data_arrivo','asc')
+                    ->get();
 
-        return response($html, 200, [
+        // prepara il logo (base64) — path in public/images/logo.png
+        $logoPath = public_path('images/favicon.ico');
+        $logoData = null;
+        if (file_exists($logoPath) && is_readable($logoPath)) {
+            $type = function_exists('mime_content_type') ? mime_content_type($logoPath) : 'image/png'; // fallback se fileinfo non disponibile
+            $data = file_get_contents($logoPath);
+            $base64 = base64_encode($data);
+            $logoData = "data:{$type};base64,{$base64}";
+        }
+
+        // render della view (passa $logoData)
+        $html = view('pratiche.exports.table_export', compact('pratiche', 'logoData', 'year'))->render();
+
+        // Excel in alcune versioni necessita BOM per riconoscere l'UTF-8 correttamente
+        $bom = "\xEF\xBB\xBF";
+
+        return response($bom . $html, 200, [
             'Content-Type' => 'application/vnd.ms-excel; charset=UTF-8',
-            'Content-Disposition' => "attachment; filename=\"$filename\"",
+            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
         ]);
     }
 
@@ -274,7 +421,18 @@ class AdminController extends Controller
         $filename = "pratiche_{$year}.doc";
         $pratiche = Practice::whereYear('data_arrivo', $year)->orderBy('data_arrivo','asc')->get();
 
-        $html = view('pratiche.exports.word_export', compact('pratiche'))->render();
+        // path del logo
+        $logoPath = public_path('images/favicon.ico');
+
+        // prepara il source embeddato (base64) se il file esiste
+        $logoSrc = null;
+        if (file_exists($logoPath) && is_readable($logoPath)) {
+            $mime = function_exists('mime_content_type') ? mime_content_type($logoPath) : 'image/png';
+            $data = base64_encode(file_get_contents($logoPath));
+            $logoSrc = 'data:' . $mime . ';base64,' . $data;
+        }
+
+        $html = view('pratiche.exports.word_export', compact('pratiche', 'logoSrc', 'year'))->render();
 
         return response($html, 200, [
             'Content-Type' => 'application/msword; charset=UTF-8',
@@ -288,31 +446,60 @@ class AdminController extends Controller
     public function exportYearPdf($year)
     {
         if (!ctype_digit((string)$year)) {
-            return redirect()->back()->with('error', 'Anno non valido.');
+        return redirect()->back()->with('error', 'Anno non valido.');
         }
+
         $pratiche = \App\Models\Practice::whereYear('data_arrivo', $year)
             ->orderBy('data_arrivo', 'asc')
             ->get();
-        $html = view('pratiche.exports.pdf_export', compact('pratiche', 'year'))->render();
 
+        // percorso file logo dentro public (modifica se lo tieni altrove)
+        $logoPath = public_path('images/amglabweb.png');
+
+        if (!file_exists($logoPath)) {
+            // fallback: puoi usare un logo alternativo o lasciare vuoto
+            // qui ritorniamo comunque la vista senza logo, ma potresti anche abortare
+            Log::warning("Logo non trovato: {$logoPath}");
+            $logoFileUrl = null;
+        } else {
+            // $normalized = str_replace('\\', '/', $logoPath);
+
+            // $logoFileUrl = 'file:///' . ltrim($normalized, '/');
+            $logoFileUrl = 'file:///' . str_replace('\\', '/', $logoPath);
+        }
+
+        // render della view (passiamo anche logoFileUrl)
+        $html = view('pratiche.exports.pdf_export', compact('pratiche', 'year', 'logoFileUrl'))->render();
+
+        // binario wkhtmltopdf (controllo e normalizzazione)
         $binaryPath = config('snappy.pdf.binary') ?: 'C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe';
 
-        // aggiungi virgolette esterne se non ci sono
-        if (strpos($binaryPath, ' ') !== false && $binaryPath[0] !== '"') {
-            $binaryPath = '"' . $binaryPath . '"';
+        // rimuovi eventuali virgolette attorno al path per file_exists
+        $cleanBinary = trim($binaryPath, '"');
+
+        if (!file_exists($cleanBinary)) {
+            // non usare dd() in produzione: logga e ritorna con messaggio
+            Log::error("wkhtmltopdf binary non trovato: {$cleanBinary}");
+            return redirect()->back()->with('error', 'Errore: eseguibile wkhtmltopdf non trovato sul server.');
         }
 
-        // Debug: mostra il path e se esiste
-        if (!file_exists(trim($binaryPath, '"'))) {
-            dd("Binary non trovato", $binaryPath);
-        }
-
+        // se il path contiene spazi, keep the original $binaryPath so that the constructor can accept quotes if needed
         $snappy = new \Knp\Snappy\Pdf($binaryPath);
+
+        // opzioni
         $snappy->setOption('page-size', 'A4');
         $snappy->setOption('orientation', 'Landscape');
         $snappy->setOption('encoding', 'UTF-8');
         $snappy->setOption('enable-local-file-access', true);
         $snappy->setOption('no-outline', true);
+        // margine inferiore (lascia spazio per footer fisso nel CSS)
+        $snappy->setOption('margin-bottom', '20mm');
+        $snappy->setOption('footer-right', 'Pagina [page] di [toPage]');
+        $snappy->setOption('footer-font-size', 7);
+        $snappy->setOption('footer-spacing', 5);
+        $snappy->setOption('footer-left', 'AMG Lab - Gestione Pratiche');
+
+         // genera il PDF");
 
         try {
             $pdfContent = $snappy->getOutputFromHtml($html);
@@ -321,8 +508,10 @@ class AdminController extends Controller
                 'Content-Disposition' => "attachment; filename=\"pratiche_{$year}.pdf\"",
             ]);
         } catch (\Exception $e) {
-            // Mostra messaggio di errore per debug
-            dd("Errore PDF: " . $e->getMessage());
+            Log::error('Errore generazione PDF: ' . $e->getMessage(), [
+                'exception' => $e,
+            ]);
+            return redirect()->back()->with('error', 'Si è verificato un errore durante la generazione del PDF. Controlla i log.');
         }
     }
 
@@ -404,5 +593,56 @@ class AdminController extends Controller
             'totale','inGiacenza','inLavorazione','completate',
             'labels','datasets','statiCount','recent','recentActivities'
         ));
+    }
+
+    public function toggleInvoiceStatus(Request $request, $id)
+    {
+        $practice = Practice::findOrFail($id);
+
+        // autorizzazione opzionale (se hai policies)
+        // $this->authorize('update', $practice);
+
+        // toggle
+        $practice->stato_fattura = ($practice->stato_fattura === 'emessa') ? 'non_emessa' : 'emessa';
+        $practice->save();
+
+        // opzionale: log attività (se usi activitylog)
+        if (function_exists('activity')) {
+            activity('pratiche')
+                ->performedOn($practice)
+                ->causedBy(auth()->user())
+                ->withProperties(['stato_fattura' => $practice->stato_fattura])
+                ->log("Stato fattura cambiato in {$practice->stato_fattura}");
+        }
+
+        return response()->json([
+            'success' => true,
+            'stato_fattura' => $practice->stato_fattura,
+            'message' => 'Stato fattura aggiornato.'
+        ]);
+    }
+
+    public function togglePaymentStatus(Request $request, $id)
+    {
+        $practice = Practice::findOrFail($id);
+
+        // $this->authorize('update', $practice);
+
+        $practice->stato_pagamento = ($practice->stato_pagamento === 'pagato') ? 'non_pagato' : 'pagato';
+        $practice->save();
+
+        if (function_exists('activity')) {
+            activity('pratiche')
+                ->performedOn($practice)
+                ->causedBy(auth()->user())
+                ->withProperties(['stato_pagamento' => $practice->stato_pagamento])
+                ->log("Stato pagamento cambiato in {$practice->stato_pagamento}");
+        }
+
+        return response()->json([
+            'success' => true,
+            'stato_pagamento' => $practice->stato_pagamento,
+            'message' => 'Stato pagamento aggiornato.'
+        ]);
     }
 }

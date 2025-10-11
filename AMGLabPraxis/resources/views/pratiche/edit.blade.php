@@ -1,8 +1,8 @@
 @extends('layouts.navbar')
 
 @section('content')
-<div class="d-flex justify-content-center">
-    <div class="col-lg-8">
+<div class="d-flex justify-content-center py-4">
+    <div class="col-md-10 col-lg-8">
         <h3 class="mb-4">Modifica Pratica #{{ $pr->id }}</h3>
 
         <form method="POST" action="{{ route('admin.pratiche.update', $pr->id) }}">

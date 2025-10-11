@@ -1,15 +1,16 @@
 @extends('layouts.navbar')
 
 @section('content')
-<div class="container py-4">
+<div class="py-4">
     <div class="row justify-content-center">
         <div class="col-lg-8">
-
-            <div class="d-flex justify-content-between align-items-center mb-4">
+            <div class="d-flex flex-wrap justify-content-between align-items-start mb-4">
                 <h3 class="mb-0">Archivio pratiche</h3>
-                <a class="btn btn-secondary" href="{{ route('admin.pratiche.index') }}">
-                    <i class="fas fa-arrow-left me-1"></i> Torna alla lista
-                </a>
+                <div class="mt-2 mt-md-0">
+                    <a class="btn btn-secondary" href="{{ route('admin.pratiche.index') }}">
+                        <i class="fas fa-arrow-left me-1"></i> Torna alla lista
+                    </a>
+                </div>
             </div>
 
             @if(($archive ?? collect())->isEmpty())
@@ -37,7 +38,7 @@
                                 </button>
                                 <small class="text-muted d-block">Mesi e numero pratiche</small>
                             </div>
-                            <div>
+                            <div class="ms-2">
                                 <button type="button" class="btn btn-sm btn-outline-primary toggle-archive" data-bs-target="#{{ $collapseId }}">
                                     Mostra/Nascondi
                                 </button>
@@ -56,7 +57,7 @@
                                             $monthNameUc = ucfirst($monthName);
                                         @endphp
 
-                                        <div class="col-auto">
+                                        <div class="col-auto px-0 ms-3">
                                             <a href="{{ route('admin.pratiche.archive.view', ['year' => $year, 'month' => $m]) }}" class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center" title="Visualizza pratiche per {{ $monthNameUc }} {{ $year }}">
                                                 <i class="far fa-calendar-alt me-2"></i>
                                                 <span>{{ $monthNameUc }}</span>
@@ -66,7 +67,7 @@
                                     @endforeach
                                 </div>
                                 <div class="btn-group d-flex justify-content-end" role="group" aria-label="Export">
-                                    <div class="btn-group-sm d-flex align-items-center gap-2 mt-5">
+                                    <div class="btn-group-sm d-flex flex-wrap justify-content-end align-items-center gap-2 mt-5">
                                         <small><b>Esporta con: </b></small>
                                         <a href="{{ route('admin.pratiche.export.year.csv', $year) }}" class="btn btn-outline-secondary" title="Esporta CSV">
                                             <i class="fas fa-file-csv"></i> CSV
@@ -93,11 +94,15 @@
                     </div>
                 @endforeach
             @endif
-
         </div>
     </div>
-</div>
 @endsection
+
+<style>
+body {
+    background-color: #34578a;
+}
+</style>
 
 @push('scripts')
 <script>
@@ -106,13 +111,13 @@ document.addEventListener('DOMContentLoaded', function () {
     document.querySelectorAll('.toggle-archive').forEach(function(btn) {
         btn.addEventListener('click', function(e) {
             e.preventDefault();
-            var targetSelector = btn.getAttribute('data-bs-target');
+            const targetSelector = btn.getAttribute('data-bs-target');
             if (!targetSelector) return;
-            var targetEl = document.querySelector(targetSelector);
+            const targetEl = document.querySelector(targetSelector);
             if (!targetEl) return;
 
             // Ottieni o crea l'istanza Collapse e fai il toggle
-            var collapseInstance = bootstrap.Collapse.getOrCreateInstance(targetEl, {toggle: false});
+            const collapseInstance = bootstrap.Collapse.getOrCreateInstance(targetEl, {toggle: false});
             collapseInstance.toggle();
         });
     });

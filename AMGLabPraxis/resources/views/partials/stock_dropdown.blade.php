@@ -12,9 +12,10 @@
 @endphp
 
 <div class="nav-item dropdown dropdown-hover">
-    <a class="nav-link dropdown-toggle d-flex align-items-center text-white" href="#"
+    <a class="nav-link dropdown-toggle position-relative d-flex align-items-center text-white ps-0 ms-lg-1" href="#"
         id="giacenzaDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-        <span class="badge bg-danger me-2">{{ $global_giacenza_count ?? 0 }}</span>
+        <i class="fas fa-clock me-2"></i>
+        <span class="badge bg-danger position-absolute top-0 end-100 rounded-1">{{ $global_giacenza_count ?? 0 }}</span>
         <span class="text-decoration-none">Giacenze</span>
     </a>
 
@@ -46,7 +47,7 @@
 
         <li><hr class="dropdown-divider"></li>
         <li class="text-center">
-            <a class="dropdown-item text-primary" href="{{ route('admin.pratiche.index') }}">
+            <a class="dropdown-item text-primary" href="{{ route('admin.pratiche.index', ['stato' => 'in_giacenza']) }}">
                 <small>Vedi tutte le giacenze</small>
             </a>
         </li>

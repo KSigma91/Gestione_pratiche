@@ -6,3 +6,20 @@
 
 // Bootstrap
 @import '~bootstrap/scss/bootstrap';
+
+/* layout look */
+.practice-card { transition: transform .12s ease, box-shadow .12s ease; }
+.practice-card:hover { transform: translateY(-4px); box-shadow: 0 10px 30px rgba(2,6,23,0.06); }
+
+.avatar { font-size: 18px; color: #0d6efd; }
+
+.table td.text-truncate { max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.btn-group-sm .btn { padding: .25rem .5rem; }
+
+.badge.bg-warning.text-dark { background:#ffd966 !important; color:#212529 !important; }
+
+/* responsive tweaks */
+@media (max-width: 575.98px) {
+    .practice-card .card-body { padding: 0.8rem; }
+}

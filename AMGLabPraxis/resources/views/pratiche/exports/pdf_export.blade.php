@@ -4,15 +4,27 @@
     <meta charset="utf-8" />
     <title>Pratiche {{ $year ?? '' }}</title>
     <style>
-        body { font-family: DejaVu Sans, sans-serif; font-size: 12px; }
+        body { font-family: Inter, sans-serif; font-size: 12px; }
+
         table { width:100%; border-collapse: collapse; }
+
         th, td { border: 1px solid #444; padding: 6px; text-align: left; vertical-align: top; }
+
         th { background: #eee; }
+
         h3 { margin-bottom: 0.5rem; }
+
+        .pdf-export img { height: 50px; display:inline-block; vertical-align:middle; }
     </style>
 </head>
 <body>
+    @if(!empty($logoFileUrl))
+    <div class="pdf-export">
+        <img src="{{ $logoFileUrl }}" alt="Logo">
+    </div>
+    @endif
     <h3>Pratiche - {{ $year ?? '' }}</h3>
+
     <table>
         <thead>
             <tr>
@@ -43,5 +55,7 @@
         @endforelse
         </tbody>
     </table>
+</div>
+
 </body>
 </html>

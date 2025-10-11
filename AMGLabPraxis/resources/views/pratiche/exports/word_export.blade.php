@@ -3,8 +3,26 @@
 <head>
     <meta charset="utf-8" />
     <title>Pratiche</title>
+    <style>
+        body { font-family: Inter, sans-serif; font-size: 12px; }
+
+        table { width:100%; border-collapse: collapse; }
+
+        th, td { border: 1px solid #444; padding: 6px; text-align: left; vertical-align: top; }
+
+        th { background: #eee; }
+
+        h2 { margin-bottom: 0.5rem; }
+
+        .word-export img { height: 16px; display: inline-block; vertical-align: middle; }
+    </style>
 </head>
 <body>
+    @if(!empty($logoSrc))
+    <div class="word-export">
+        <img src="{{ $logoSrc }}" alt="Logo">
+    </div>
+    @endif
     <h2>Pratiche</h2>
     <table border="1" cellpadding="4" cellspacing="0">
         <thead>

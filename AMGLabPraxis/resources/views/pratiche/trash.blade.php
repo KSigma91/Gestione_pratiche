@@ -1,13 +1,15 @@
 @extends('layouts.navbar')
 
 @section('content')
-<div class="container py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h3><i class="fas fa-trash-alt me-2"></i> Cestino Pratiche</h3>
-        <a class="btn btn-secondary" href="{{ route('admin.pratiche.index') }}"><i class="fas fa-arrow-left me-1"></i> Torna alla lista</a>
+<div class="py-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-start mb-4">
+        <h3 class="mb-0"><i class="fas fa-trash-alt me-2"></i> Cestino Pratiche</h3>
+        <div class="mt-2 mt-md-0">
+            <a class="btn btn-secondary" href="{{ route('admin.pratiche.index') }}"><i class="fas fa-arrow-left me-1"></i> Torna alla lista</a>
+        </div>
     </div>
 
-    {{-- Filtro per cliente --}}
+{{-- Filtro per cliente --}}
     <form method="GET" action="{{ route('admin.pratiche.trash') }}" class="mb-3">
         <div class="input-group">
             <input type="text" name="cliente" class="form-control" placeholder="Filtra per cliente" value="{{ request('cliente') }}">
@@ -60,7 +62,7 @@
             @endforeach
         </div>
 
-        <div class="mt-4">
+        <div class="pag-position">
             {{ $pratiche->links() }}
         </div>
     @endif

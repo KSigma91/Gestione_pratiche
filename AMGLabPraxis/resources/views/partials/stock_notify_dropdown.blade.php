@@ -1,7 +1,7 @@
-<li class="nav-item dropdown dropdown-hover">
-    <a class="nav-link dropdown-toggle text-white" href="#" id="dropdownNotifiche" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+<li class="nav-item dropdown dropdown-hover mt-2 mt-lg-0">
+    <a class="nav-link dropdown-toggle position-relative text-white ps-0 ms-lg-1" href="#" id="dropdownNotifiche" role="button" data-bs-toggle="dropdown" aria-expanded="false">
         @if($global_notifiche_giacenza->count() > 0)
-            <span class="badge bg-danger me-1">{{ $global_notifiche_giacenza->count() }}</span>
+            <span class="badge bg-danger position-absolute top-0 end-100">{{ $global_notifiche_giacenza->count() }}</span>
         @endif
         <i class="fas fa-bell"></i>
     </a>
