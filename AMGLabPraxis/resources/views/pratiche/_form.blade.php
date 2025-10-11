@@ -1,4 +1,4 @@
-<div class="d-flex flex-column">
+<div class="d-flex flex-column gap-3">
 <!-- Cliente -->
     <div class="form-group">
         <label for="cliente_nome"><small class="text-secondary">Cliente</small></label>
@@ -37,13 +37,15 @@
         @error('stato')<small class="text-danger">{{ $message }}</small>@enderror
     </div>
 <!-- Data e ora di registrazione pratica -->
-    <div class="form-group m-0">
+    <div class="form-group">
         <label for="data_arrivo"><small class="text-secondary">Data e ora di arrivo</small></label>
         <input id="data_arrivo" name="data_arrivo" type="datetime-local" class="form-control @error('data_arrivo') is-invalid @enderror" value="{{ old('data_arrivo', \Carbon\Carbon::now()->setTimezone(config('app.timezone'))->format('Y-m-d\TH:i')) }}">
         @error('data_arrivo')
             <small class="invalid-feedback">{{ $message }}</small>
         @enderror
-        <small class="form-text text-info text-end" style="font-size: .78em">Se non cambiata, verrà registrata l'ora corrente.</small>
+        <div class="text-end">
+            <small class="form-text text-info" style="font-size: .78em">Se non cambiata, verrà registrata l'ora corrente.</small>
+        </div>
     </div>
 <!-- Data di scadenza della pratica -->
     <div class="form-group">

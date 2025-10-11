@@ -30,8 +30,6 @@ body {
 .chart-card {
     height: 500px;
     position: relative;
-
-
 }
 
 @media screen and (max-width: 767px) {
@@ -138,7 +136,7 @@ body {
 <!-- Charts + recenti -->
     <div class="row g-4">
         <div class="col-lg-8">
-            <div class="card chart-card p-3">
+            <div class="card chart-card p-3 pb-5">
                 <div class="d-flex justify-content-between align-items-center mb-2">
                     <div>
                         <h5 class="mb-0">Pratiche messe in giacenza (ultimi 12 mesi)</h5>
@@ -146,9 +144,9 @@ body {
                     </div>
                     <div class="small-muted">Visualizzazione: ultimi 12 mesi</div>
                 </div>
-                <canvas id="chartGiacenza" height="50"></canvas>
+                <canvas id="chartGiacenza" style="padding-bottom: 3rem" height="50"></canvas>
             </div>
-            <div class="card mt-3 chart-card p-3">
+            <div class="card chart-card mt-5 p-3">
                 <div class="d-flex justify-content-between align-items-center mb-2">
                     <div>
                         <h5 class="mb-0">Distribuzione stato</h5>
@@ -178,7 +176,7 @@ body {
         </div>
 <!-- Colonna destra: recenti + attività -->
         <div class="col-lg-4">
-            <div class="card card-ghost mb-3 p-3">
+            <div class="card mb-3 p-3">
                 <h6 class="mb-2">Ultime pratiche aggiornate</h6>
                 <div class="recent-list">
                     @forelse($recent as $r)
@@ -190,7 +188,7 @@ body {
                                 </div>
                                 <div class="text-end small-muted">
                                     {{ \Carbon\Carbon::parse($r->updated_at)->setTimezone(config('app.timezone'))->diffForHumans() }}
-                                    <div class="mt-1"><span class="badge bg-light text-dark">{{ ucfirst(str_replace('_',' ', $r->stato)) }}</span></div>
+                                    <div class="mt-1"><span class="badge bg-secondary bg-opacity-25 text-dark">{{ ucfirst(str_replace('_',' ', $r->stato)) }}</span></div>
                                 </div>
                             </div>
                         </div>

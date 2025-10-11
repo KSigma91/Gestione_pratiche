@@ -57,7 +57,7 @@
                     </li>
 {{-- Cestino --}}
                     <li class="nav-item">
-                        <a class="nav-link position-relative text-white ps-0 ms-lg-1" href="{{ route('admin.pratiche.trash') }}">
+                        <a class="nav-link position-relative text-white ps-0 ms-lg-2" href="{{ route('admin.pratiche.trash') }}">
                             <i class="fas fa-trash-alt me-1"></i> Cestino
                             @if(isset($global_trash_count) && $global_trash_count > 0)
                                 <span class="badge position-absolute top-0 end-100 rounded-1 bg-danger">{{ $global_trash_count }}</span>
@@ -155,6 +155,7 @@
             background: linear-gradient(135deg, #fdfeff 0%, #fdfeff 100%);
             /* background-color: #fdfeff; */
             min-height: 100vh;
+            font-size: .97em;
         }
         .navbar {
             background-color: #232f3e;

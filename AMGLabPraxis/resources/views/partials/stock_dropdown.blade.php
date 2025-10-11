@@ -12,7 +12,7 @@
 @endphp
 
 <div class="nav-item dropdown dropdown-hover">
-    <a class="nav-link dropdown-toggle position-relative d-flex align-items-center text-white ps-0 ms-lg-1" href="#"
+    <a class="nav-link dropdown-toggle position-relative d-flex align-items-center text-white ps-0 ms-lg-2" href="#"
         id="giacenzaDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
         <i class="fas fa-clock me-2"></i>
         <span class="badge bg-danger position-absolute top-0 end-100 rounded-1">{{ $global_giacenza_count ?? 0 }}</span>

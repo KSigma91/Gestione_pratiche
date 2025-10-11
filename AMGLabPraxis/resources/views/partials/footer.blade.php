@@ -27,6 +27,7 @@ main, .main-content {
     bottom: 0;
     left: 0;
     right: 0;
+    width: 190px;
     height: var(--site-footer-height);
     z-index: 1050;
     display: block;
