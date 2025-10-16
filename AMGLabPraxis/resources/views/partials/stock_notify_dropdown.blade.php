@@ -17,7 +17,7 @@
                 </a>
             </li>
         @empty
-            <li class="dropdown-item text-muted">Nessuna notifica</li>
+            <li class="dropdown-item text-muted small">Nessuna notifica</li>
         @endforelse
     </ul>
 </li>

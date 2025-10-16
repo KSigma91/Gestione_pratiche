@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Gestionale Pratiche - Admin</title>
+    <title>AMG Lab Praxis</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
     {{-- CSS --}}
@@ -25,7 +25,23 @@
     <base href="{{ url('/') }}/">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
 </head>
-@include('partials.activity_button')
+@php
+    $excluded = [
+        'login',
+        'register',
+        'password.request',
+        'password.email',
+        'password.reset',
+        'password.update'
+        // aggiungi altri nomi di rotta da escludere
+    ];
+    $current = \Illuminate\Support\Facades\Route::currentRouteName();
+@endphp
+
+@if (! in_array($current, $excluded))
+    @include('partials.activity_button')
+@endif
+
 @stack('scripts')
 <body>
     <nav class="navbar sticky-top navbar-expand-lg navbar-dark shadow-sm">
@@ -112,7 +128,7 @@
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item" href="{{ route('admin.sessions.index') }}"><i class="fas fa-shield-alt me-2"></i>Info sessione</a></li>
 {{-- Log activity --}}
-                            <li class="dropdown-item">
+                            <li class="dropdown-item mt-1">
                                 <a class="text-dark text-decoration-none" href="{{ route('admin.logs') }}"><i class="fas fa-history me-1"></i> Log attività</a>
                             </li>
                             <li><hr class="dropdown-divider"></li>
