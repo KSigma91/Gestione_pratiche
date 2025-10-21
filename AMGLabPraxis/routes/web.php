@@ -48,7 +48,7 @@ Route::middleware('auth', 'no.cache')->prefix('admin')->name('admin.')->group(fu
     // Cestino
     Route::get('/pratiche/cestino', [AdminController::class, 'trash'])->name('pratiche.trash');
     Route::post('/pratiche/{id}/ripristina', [AdminController::class, 'restore'])->name('pratiche.restore');
-    Route::post('/pratiche/{id}/force-delete', [AdminController::class, 'forceDelete'])->name('pratiche.force-delete');
+    Route::delete('/pratiche/{id}/force-delete', [AdminController::class, 'forceDelete'])->name('pratiche.force-delete');
 
     // Altre azioni
     Route::post('/pratiche/{id}/delete', [AdminController::class, 'destroy'])->name('pratiche.delete');

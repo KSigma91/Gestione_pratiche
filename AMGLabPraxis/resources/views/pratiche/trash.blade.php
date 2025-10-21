@@ -50,6 +50,7 @@
                                     </form>
                                     <form action="{{ route('admin.pratiche.force-delete', $p->id) }}" method="POST">
                                         @csrf
+                                        @method('DELETE')
                                         <button type="submit" class="btn btn-danger" title="Elimina definitivamente">
                                             <i class="fas fa-trash text-white"></i>
                                         </button>
